@@ -1,0 +1,110 @@
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--panel-bg);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  transition: width var(--transition-speed) ease;
+  z-index: 30;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar-header h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary-color);
+  transition: opacity var(--transition-speed), width var(--transition-speed);
+}
+
+.sidebar.collapsed .sidebar-header h1 {
+  opacity: 0;
+  width: 0;
+}
+
+.toggle-btn {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 24px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  transition: transform var(--transition-speed), background 0.2s, color 0.2s;
+}
+
+.toggle-btn:hover {
+  background-color: var(--hover-bg);
+  color: var(--primary-color);
+}
+
+.sidebar.collapsed .toggle-btn {
+  transform: rotate(180deg);
+  margin: 0 auto;
+}
+
+.nav-list {
+  flex: 1;
+  padding: 12px 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 22px;
+  color: var(--text-main);
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.nav-item:hover {
+  background-color: var(--hover-bg);
+}
+
+.nav-item.active {
+  background-color: var(--hover-bg);
+  border-left-color: var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 650;
+}
+
+.nav-icon {
+  min-width: 24px;
+  margin-right: 12px;
+  font-size: 17px;
+  text-align: center;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.sidebar.collapsed .nav-icon {
+  margin-right: 0;
+}
+
+.sidebar.collapsed .nav-text {
+  display: none;
+}

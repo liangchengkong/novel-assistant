@@ -1,85 +1,91 @@
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useApp } from '../../context/AppContext';
+import { mockProjects, type MockProject } from '../../mocks/novelMockData';
+import './ProjectsPage.css';
 
 export default function ProjectsPage() {
-  const { state } = useApp();
+  const [projects, setProjects] = useState<MockProject[]>(() => mockProjects.map((project) => ({ ...project })));
 
-  const getCoverGradient = (id: string) => {
-    if (id === '1') return 'linear-gradient(135deg, #a8caba, #5b8c85)';
-    if (id === '2') return 'linear-gradient(135deg, #d4b8b8, #a37c7c)';
-    return 'linear-gradient(135deg, #b8c1d4, #7c8ea3)';
-  };
+  const sortedProjects = useMemo(
+    () => [...projects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
+    [projects],
+  );
+
+  function handleCreateProject() {
+    const title = window.prompt('请输入小说名称', '未命名小说');
+    if (!title?.trim()) return;
+
+    const now = new Date().toISOString();
+    setProjects((prev) => [
+      {
+        id: `mock-project-${Date.now()}`,
+        title: title.trim(),
+        genre: '未分类',
+        inspiration: '',
+        worldbuilding: '',
+        characters: '',
+        keyEvents: [],
+        storyline: [],
+        volumes: [],
+        chapters: [],
+        createdAt: now,
+        updatedAt: now,
+      },
+      ...prev,
+    ]);
+  }
 
   return (
     <>
       <div className="page-header">
-        <h2>我的作品</h2>
-        <button className="btn-primary">+ 新建小说</button>
+        <div>
+          <h2>我的作品</h2>
+          <p>当前使用前端 mock 数据，刷新后会恢复初始状态。</p>
+        </div>
+        <button type="button" onClick={handleCreateProject} className="btn-primary">
+          + 新建小说
+        </button>
       </div>
-      <div 
-        className="overflow-y-auto flex-1"
-        style={{ padding: '32px' }}
-      >
-        <div 
-          className="grid gap-6"
-          style={{ 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))'
-          }}
-        >
-          {state.projects.map((project) => (
+
+      <section className="projects-container">
+        <div className="projects-grid">
+          {sortedProjects.map((project) => (
             <Link
               key={project.id}
-              to="/workspace"
-              className="block overflow-hidden cursor-pointer no-underline"
-              style={{
-                backgroundColor: 'var(--panel-bg)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '8px',
-                color: 'inherit',
-                transition: 'transform 0.2s, box-shadow 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.06)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
+              to={`/workspace?project=${encodeURIComponent(project.id)}`}
+              className="project-card"
             >
-              <div 
-                style={{ 
-                  height: '140px',
-                  background: getCoverGradient(project.id)
-                }} 
-              />
-              <div style={{ padding: '16px' }}>
-                <div 
-                  style={{ 
-                    fontSize: '16px', 
-                    fontWeight: 600, 
-                    marginBottom: '8px',
-                    color: 'var(--text-main)'
-                  }}
-                >
-                  {project.title}
-                </div>
-                <div 
-                  style={{ 
-                    fontSize: '12px', 
-                    color: 'var(--text-muted)',
-                    display: 'flex',
-                    justifyContent: 'space-between'
-                  }}
-                >
+              <div className={getCoverClassName(project.id)}>
+                <span>{project.title.replace(/[《》]/g, '').slice(0, 2)}</span>
+              </div>
+              <div className="project-info">
+                <div className="project-title">{project.title}</div>
+                <div className="project-summary">{project.inspiration || '暂未填写创作灵感'}</div>
+                <div className="project-meta">
                   <span>{project.genre}</span>
-                  <span>{project.lastModified}</span>
+                  <span>{formatModifiedTime(project.updatedAt)}</span>
                 </div>
               </div>
             </Link>
           ))}
         </div>
-      </div>
+      </section>
     </>
   );
+}
+
+function getCoverClassName(id: string) {
+  const index = Math.abs([...id].reduce((sum, char) => sum + char.charCodeAt(0), 0)) % 3;
+  return `project-cover tone-${index + 1}`;
+}
+
+function formatModifiedTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }

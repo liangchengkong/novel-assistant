@@ -1,20 +1,12 @@
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import './MainLayout.css';
 
 export default function MainLayout() {
   return (
-    <div 
-      className="flex h-screen overflow-hidden"
-      style={{ backgroundColor: 'var(--bg-color)' }}
-    >
+    <div className="app-shell">
       <Sidebar />
-      <main 
-        className="flex-1 flex flex-col min-w-0"
-        style={{ 
-          backgroundColor: 'var(--bg-color)',
-          position: 'relative'
-        }}
-      >
+      <main className="main-container">
         <Outlet />
       </main>
     </div>
