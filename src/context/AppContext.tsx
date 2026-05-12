@@ -1,19 +1,31 @@
 import { createContext, useContext, useReducer, type ReactNode } from 'react';
+import type { ProjectDetail } from '../api/novelApi';
 
 interface AppState {
   sidebarCollapsed: boolean;
+  currentProjectId: string | null;
+  currentProject: ProjectDetail | null;
 }
 
-type AppAction = { type: 'TOGGLE_SIDEBAR' };
+type AppAction =
+  | { type: 'TOGGLE_SIDEBAR' }
+  | { type: 'SET_CURRENT_PROJECT'; projectId: string; project: ProjectDetail }
+  | { type: 'CLEAR_CURRENT_PROJECT' };
 
 const initialState: AppState = {
   sidebarCollapsed: false,
+  currentProjectId: null,
+  currentProject: null,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'TOGGLE_SIDEBAR':
       return { ...state, sidebarCollapsed: !state.sidebarCollapsed };
+    case 'SET_CURRENT_PROJECT':
+      return { ...state, currentProjectId: action.projectId, currentProject: action.project };
+    case 'CLEAR_CURRENT_PROJECT':
+      return { ...state, currentProjectId: null, currentProject: null };
     default:
       return state;
   }

@@ -1,38 +1,67 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { mockProjects, type MockProject } from '../../mocks/novelMockData';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { getProjects, createProject, getProject, type ProjectSummary } from '../../api/novelApi';
+import { useApp } from '../../context/AppContext';
 import './ProjectsPage.css';
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<MockProject[]>(() => mockProjects.map((project) => ({ ...project })));
+  const [projects, setProjects] = useState<ProjectSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { dispatch } = useApp();
 
-  const sortedProjects = useMemo(
-    () => [...projects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
-    [projects],
-  );
+  useEffect(() => {
+    getProjects()
+      .then(setProjects)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
 
-  function handleCreateProject() {
+  async function handleCreateProject() {
     const title = window.prompt('请输入小说名称', '未命名小说');
     if (!title?.trim()) return;
 
-    const now = new Date().toISOString();
-    setProjects((prev) => [
-      {
-        id: `mock-project-${Date.now()}`,
-        title: title.trim(),
-        genre: '未分类',
-        inspiration: '',
-        worldbuilding: '',
-        characters: '',
-        keyEvents: [],
-        storyline: [],
-        volumes: [],
-        chapters: [],
-        createdAt: now,
-        updatedAt: now,
-      },
-      ...prev,
-    ]);
+    try {
+      const project = await createProject({ title: title.trim() });
+      const fullProject = await getProject(project.id);
+      dispatch({ type: 'SET_CURRENT_PROJECT', projectId: project.id, project: fullProject });
+      navigate('/outline');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '创建失败');
+    }
+  }
+
+  async function handleSelectProject(project: ProjectSummary) {
+    try {
+      const fullProject = await getProject(project.id);
+      dispatch({ type: 'SET_CURRENT_PROJECT', projectId: project.id, project: fullProject });
+      navigate('/outline');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载失败');
+    }
+  }
+
+  const sortedProjects = useMemo(
+    () => [...projects].sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()),
+    [projects],
+  );
+
+  if (loading) {
+    return (
+      <div className="page-loading">
+        <p>加载中...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-error">
+        <p>加载失败：{error}</p>
+        <button onClick={() => window.location.reload()}>重试</button>
+      </div>
+    );
   }
 
   return (
@@ -40,7 +69,7 @@ export default function ProjectsPage() {
       <div className="page-header">
         <div>
           <h2>我的作品</h2>
-          <p>当前使用前端 mock 数据，刷新后会恢复初始状态。</p>
+          <p>共 {projects.length} 部作品</p>
         </div>
         <button type="button" onClick={handleCreateProject} className="btn-primary">
           + 新建小说
@@ -48,27 +77,34 @@ export default function ProjectsPage() {
       </div>
 
       <section className="projects-container">
-        <div className="projects-grid">
-          {sortedProjects.map((project) => (
-            <Link
-              key={project.id}
-              to={`/workspace?project=${encodeURIComponent(project.id)}`}
-              className="project-card"
-            >
-              <div className={getCoverClassName(project.id)}>
-                <span>{project.title.replace(/[《》]/g, '').slice(0, 2)}</span>
-              </div>
-              <div className="project-info">
-                <div className="project-title">{project.title}</div>
-                <div className="project-summary">{project.inspiration || '暂未填写创作灵感'}</div>
-                <div className="project-meta">
-                  <span>{project.genre}</span>
-                  <span>{formatModifiedTime(project.updatedAt)}</span>
+        {sortedProjects.length === 0 ? (
+          <div className="projects-empty">
+            <p>暂无作品，点击上方「新建小说」开始创作</p>
+          </div>
+        ) : (
+          <div className="projects-grid">
+            {sortedProjects.map((project) => (
+              <button
+                key={project.id}
+                type="button"
+                onClick={() => handleSelectProject(project)}
+                className="project-card"
+              >
+                <div className={getCoverClassName(project.id)}>
+                  <span>{project.title.replace(/[《》]/g, '').slice(0, 2)}</span>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+                <div className="project-info">
+                  <div className="project-title">{project.title}</div>
+                  <div className="project-summary">{project.summary || '暂未填写创作灵感'}</div>
+                  <div className="project-meta">
+                    <span>{project.genre}</span>
+                    <span>{formatModifiedTime(project.lastModified)}</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
     </>
   );

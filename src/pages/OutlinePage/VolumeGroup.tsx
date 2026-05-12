@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import type { MockChapter } from '../../mocks/novelMockData';
+import type { BackendChapter } from '../../api/novelApi';
 import ChapterCard from './ChapterCard';
 
 interface VolumeGroupProps {
   title: string;
   chapterCount: number;
   isOpen?: boolean;
-  chapters?: MockChapter[];
+  chapters?: BackendChapter[];
   onAddChapter?: () => void;
 }
 
@@ -28,7 +28,7 @@ export default function VolumeGroup({ title, chapterCount, isOpen = false, chapt
           ))
         ) : (
           <div className="empty-state">
-            暂无章节大纲，可点击上方“按设定自动拆分章节”生成。
+            暂无章节大纲，可点击上方"按设定自动拆分章节"生成。
           </div>
         )}
         <button type="button" className="add-timeline-btn" onClick={onAddChapter}>

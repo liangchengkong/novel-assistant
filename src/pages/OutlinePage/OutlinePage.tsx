@@ -1,41 +1,76 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  createMockChapterSplit,
-  createMockStoryline,
-  mockProjects,
-  type MockChapter,
-  type MockProject,
-} from '../../mocks/novelMockData';
+  getProject,
+  getProjects,
+  updateProject,
+  generateStoryline,
+  splitChapters,
+  createChapter,
+  type ProjectDetail,
+  type BackendVolume,
+  type BackendChapter,
+} from '../../api/novelApi';
+import { useApp } from '../../context/AppContext';
 import VolumeGroup from './VolumeGroup';
 import './OutlinePage.css';
 
 type TabType = 'setting' | 'chapter-outline';
-type SettingForm = Pick<MockProject, 'inspiration' | 'worldbuilding' | 'characters'>;
+type SettingForm = Pick<ProjectDetail, 'inspiration' | 'worldbuilding' | 'characters'>;
 
 export default function OutlinePage() {
+  const { state, dispatch } = useApp();
+  const [project, setProject] = useState<ProjectDetail | null>(state.currentProject);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('setting');
-  const [project, setProject] = useState<MockProject>(() => cloneProject(mockProjects[0]));
   const [form, setForm] = useState<SettingForm>({
-    inspiration: project.inspiration,
-    worldbuilding: project.worldbuilding,
-    characters: project.characters,
+    inspiration: project?.inspiration || '',
+    worldbuilding: project?.worldbuilding || '',
+    characters: project?.characters || '',
   });
   const [generating, setGenerating] = useState(false);
   const [splitting, setSplitting] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (project) {
+      setForm({ inspiration: project.inspiration, worldbuilding: project.worldbuilding, characters: project.characters });
+      return;
+    }
+    // Context 中没有项目，加载第一个
+    setLoading(true);
+    getProjects()
+      .then((list) => {
+        if (list.length === 0) {
+          setError('暂无作品，请先在 ProjectsPage 创建作品');
+          return null;
+        }
+        return getProject(list[0].id);
+      })
+      .then((p) => {
+        if (p) {
+          setProject(p);
+          dispatch({ type: 'SET_CURRENT_PROJECT', projectId: p.id, project: p });
+          setForm({ inspiration: p.inspiration, worldbuilding: p.worldbuilding, characters: p.characters });
+        }
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   const storyline = useMemo(
-    () => [...project.storyline].sort((a, b) => a.order - b.order),
-    [project.storyline],
+    () => [...(project?.storyline || [])].sort((a, b) => a.order - b.order),
+    [project?.storyline],
   );
 
   const volumes = useMemo(
-    () => [...project.volumes].sort((a, b) => a.order - b.order),
-    [project.volumes],
+    () => [...(project?.volumes || [])].sort((a, b) => a.order - b.order),
+    [project?.volumes],
   );
 
   const chaptersByVolume = useMemo(() => {
-    const grouped = new Map<string, MockChapter[]>();
-    for (const chapter of project.chapters) {
+    const grouped = new Map<string, BackendChapter[]>();
+    for (const chapter of project?.chapters || []) {
       const chapters = grouped.get(chapter.volumeId) || [];
       chapters.push(chapter);
       grouped.set(chapter.volumeId, chapters);
@@ -44,72 +79,89 @@ export default function OutlinePage() {
       chapters.sort((a, b) => a.order - b.order);
     }
     return grouped;
-  }, [project.chapters]);
+  }, [project?.chapters]);
 
   function handleTextChange(field: keyof SettingForm, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleGenerateStoryline() {
+  async function handleSaveSettings() {
+    if (!project) return;
+    setSaving(true);
+    try {
+      const updated = await updateProject(project.id, form);
+      setProject((prev) => prev ? { ...prev, ...updated } : prev);
+      dispatch({ type: 'SET_CURRENT_PROJECT', projectId: project.id, project: { ...project, ...updated } });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '保存失败');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleGenerateStoryline() {
+    if (!project) return;
     setGenerating(true);
-    window.setTimeout(() => {
-      setProject((prev) => {
-        const updated = { ...prev, ...form };
-        return {
-          ...updated,
-          storyline: createMockStoryline(updated),
-          updatedAt: new Date().toISOString(),
-        };
-      });
+    try {
+      const items = await generateStoryline(project.id, { keyEvents: [] });
+      const updated = { ...project, storyline: items };
+      setProject(updated);
+      dispatch({ type: 'SET_CURRENT_PROJECT', projectId: project.id, project: updated });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '生成失败');
+    } finally {
       setGenerating(false);
-    }, 450);
+    }
   }
 
-  function handleSplitChapters() {
+  async function handleSplitChapters() {
+    if (!project) return;
     setSplitting(true);
-    window.setTimeout(() => {
-      setProject((prev) => {
-        const base = prev.storyline.length > 0 ? prev : { ...prev, storyline: createMockStoryline(prev) };
-        const result = createMockChapterSplit(base);
-        return {
-          ...base,
-          volumes: result.volumes,
-          chapters: result.chapters,
-          updatedAt: new Date().toISOString(),
-        };
-      });
+    try {
+      const result = await splitChapters(project.id);
+      const updated = { ...project, volumes: result.volumes, chapters: [] };
+      setProject(updated);
+      dispatch({ type: 'SET_CURRENT_PROJECT', projectId: project.id, project: updated });
       setActiveTab('chapter-outline');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '拆分失败');
+    } finally {
       setSplitting(false);
-    }, 450);
+    }
   }
 
-  function handleAddChapter(volumeId?: string) {
-    const targetVolume = project.volumes.find((volume) => volume.id === volumeId) || project.volumes[0];
-    if (!targetVolume) return;
+  async function handleAddChapter(volumeId: string) {
+    if (!project) return;
+    try {
+      const chapter = await createChapter(project.id, { volumeId, title: '新章节' });
+      setProject((prev) => {
+        if (!prev) return prev;
+        const updated = {
+          ...prev,
+          chapters: [...prev.chapters, chapter],
+          volumes: prev.volumes.map(v =>
+            v.id === volumeId ? { ...v, chapterIds: [...v.chapterIds, chapter.id] } : v
+          ),
+        };
+        dispatch({ type: 'SET_CURRENT_PROJECT', projectId: project.id, project: updated });
+        return updated;
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '添加失败');
+    }
+  }
 
-    const order = project.chapters.length + 1;
-    const chapter: MockChapter = {
-      id: `manual-chapter-${order}`,
-      volumeId: targetVolume.id,
-      order,
-      title: `第${order}章：新的转折`,
-      corePlot: '手动添加的章节大纲，可继续编辑为正式剧情节点。',
-      characters: project.characters || '沿用当前人物设定',
-      transition: '承接上一章冲突，并为下一章保留悬念。',
-      content: '',
-      revisedAt: null,
-    };
+  if (loading) {
+    return <div className="page-loading"><p>加载中...</p></div>;
+  }
 
-    setProject((prev) => ({
-      ...prev,
-      volumes: prev.volumes.map((volume) => (
-        volume.id === targetVolume.id
-          ? { ...volume, chapterIds: [...volume.chapterIds, chapter.id] }
-          : volume
-      )),
-      chapters: [...prev.chapters, chapter],
-      updatedAt: new Date().toISOString(),
-    }));
+  if (error || !project) {
+    return (
+      <div className="page-error">
+        <p>{error || '加载失败'}</p>
+        <button onClick={() => window.location.reload()}>重试</button>
+      </div>
+    );
   }
 
   return (
@@ -135,13 +187,11 @@ export default function OutlinePage() {
         {activeTab === 'setting' ? (
           <section className="setting-form">
             <div className="outline-action-bar">
-              <button
-                type="button"
-                onClick={handleGenerateStoryline}
-                disabled={generating}
-                className="btn-primary"
-              >
+              <button type="button" onClick={handleGenerateStoryline} disabled={generating} className="btn-primary">
                 {generating ? '正在梳理故事线...' : '智能梳理故事线'}
+              </button>
+              <button type="button" onClick={handleSaveSettings} disabled={saving} className="btn-outline">
+                {saving ? '保存中...' : '保存设定'}
               </button>
             </div>
 
@@ -178,12 +228,7 @@ export default function OutlinePage() {
                   ))}
                 </div>
                 <div className="storyline-actions">
-                  <button
-                    type="button"
-                    onClick={handleSplitChapters}
-                    disabled={splitting}
-                    className="btn-outline"
-                  >
+                  <button type="button" onClick={handleSplitChapters} disabled={splitting} className="btn-outline">
                     {splitting ? '正在拆分章节...' : '前往章节大纲拆分'}
                   </button>
                 </div>
@@ -193,12 +238,7 @@ export default function OutlinePage() {
         ) : (
           <section className="chapter-outline-list">
             <div className="outline-action-bar">
-              <button
-                type="button"
-                onClick={handleSplitChapters}
-                disabled={splitting}
-                className="btn-primary"
-              >
+              <button type="button" onClick={handleSplitChapters} disabled={splitting} className="btn-primary">
                 {splitting ? '正在拆分章节...' : '按设定自动拆分章节'}
               </button>
             </div>
@@ -219,7 +259,7 @@ export default function OutlinePage() {
               })
             ) : (
               <div className="empty-state">
-                暂无章节大纲，请先点击“按设定自动拆分章节”。
+                暂无章节大纲，请先点击"按设定自动拆分章节"。
               </div>
             )}
           </section>
@@ -250,14 +290,4 @@ function SettingTextarea({
       />
     </div>
   );
-}
-
-function cloneProject(project: MockProject): MockProject {
-  return {
-    ...project,
-    keyEvents: [...project.keyEvents],
-    storyline: project.storyline.map((item) => ({ ...item, constraints: [...item.constraints] })),
-    volumes: project.volumes.map((volume) => ({ ...volume, chapterIds: [...volume.chapterIds] })),
-    chapters: project.chapters.map((chapter) => ({ ...chapter })),
-  };
 }

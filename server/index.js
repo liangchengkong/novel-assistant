@@ -28,8 +28,152 @@ const mimeTypes = {
   '.txt': 'text/plain; charset=utf-8',
 };
 
+const seedVolumes = [
+  {
+    id: 'vol-001',
+    projectId: 'demo-stargazer',
+    order: 1,
+    title: '第一卷：拾荒者',
+    wordCount: 0,
+    chapterIds: [],
+  },
+  {
+    id: 'vol-002',
+    projectId: 'demo-stargazer',
+    order: 2,
+    title: '第二卷：遗迹',
+    wordCount: 0,
+    chapterIds: [],
+  },
+];
+
+const seedChapters = [
+  {
+    id: 'ch-001',
+    projectId: 'demo-stargazer',
+    volumeId: 'vol-001',
+    order: 1,
+    title: '第一章：D级垃圾星',
+    wordCount: 0,
+    content: '',
+    corePlot: '林铮在D级垃圾星进行例行拾荒，发现异常信号源。',
+    characters: '林铮：谨慎、坚韧、重承诺的拾荒者。',
+    transition: '林铮发现地下遗迹入口，为下一章探索遗迹埋下伏笔。',
+    revisedAt: null,
+  },
+  {
+    id: 'ch-002',
+    projectId: 'demo-stargazer',
+    volumeId: 'vol-001',
+    order: 2,
+    title: '第二章：地下遗迹',
+    wordCount: 0,
+    content: '',
+    corePlot: '林铮进入地下遗迹，发现远古外星机械文明的遗迹核心。',
+    characters: '林铮：谨慎、坚韧、重承诺的拾荒者。',
+    transition: '遗迹核心激活沉睡的机械生命体零，林铮被迫逃亡。',
+    revisedAt: null,
+  },
+  {
+    id: 'ch-003',
+    projectId: 'demo-stargazer',
+    volumeId: 'vol-001',
+    order: 3,
+    title: '第三章：机械生命体',
+    wordCount: 0,
+    content: '',
+    corePlot: '机械生命体零被激活，向林铮揭示其身份的真相。',
+    characters: '林铮：谨慎、坚韧、重承诺的拾荒者。零：沉睡的机械生命体，只提供信息与辅助。',
+    transition: '零告知林铮关于远古文明的秘密，黑帮追踪而至。',
+    revisedAt: null,
+  },
+  {
+    id: 'ch-004',
+    projectId: 'demo-stargazer',
+    volumeId: 'vol-002',
+    order: 4,
+    title: '第四章：黑帮追杀',
+    wordCount: 0,
+    content: '',
+    corePlot: '黑帮追踪到遗迹，零协助林铮逃离垃圾星。',
+    characters: '林铮：谨慎、坚韧、重承诺的拾荒者。零：沉睡的机械生命体，只提供信息与辅助。',
+    transition: '林铮与零逃离垃圾星，进入星际逃亡阶段。',
+    revisedAt: null,
+  },
+  {
+    id: 'ch-005',
+    projectId: 'demo-stargazer',
+    volumeId: 'vol-002',
+    order: 5,
+    title: '第五章：星际逃亡',
+    wordCount: 0,
+    content: '',
+    corePlot: '林铮与零穿越星域，逐步理解自身使命，确立新目标。',
+    characters: '林铮：谨慎、坚韧、重承诺的拾荒者。零：沉睡的机械生命体，只提供信息与辅助。',
+    transition: '章节收束，为后续故事留下悬念。',
+    revisedAt: null,
+  },
+];
+
+// Link chapters to volumes
+seedChapters.forEach(ch => {
+  const vol = seedVolumes.find(v => v.id === ch.volumeId);
+  if (vol) {
+    vol.chapterIds = vol.chapterIds || [];
+    vol.chapterIds.push(ch.id);
+  }
+});
+
+const seedStoryline = [
+  {
+    id: 'node-001',
+    order: 1,
+    title: '节点 1：D级垃圾星拾荒',
+    type: 'opening',
+    source: 'author-input',
+    description: '开篇阶段围绕"林铮在D级垃圾星拾荒"整理因果关系，明确前置条件、冲突来源与后续影响。人物约束：林铮，谨慎、坚韧、重承诺的拾荒者。',
+    constraints: ['只梳理作者已提供的信息', '不新增关键设定', '不改变人物核心性格'],
+  },
+  {
+    id: 'node-002',
+    order: 2,
+    title: '节点 2：发现地下遗迹',
+    type: 'progress',
+    source: 'author-input',
+    description: '承接推进围绕"发现地下遗迹"整理因果关系，明确前置条件、冲突来源与后续影响。人物约束：林铮，谨慎、坚韧、重承诺的拾荒者。',
+    constraints: ['只梳理作者已提供的信息', '不新增关键设定', '不改变人物核心性格'],
+  },
+  {
+    id: 'node-003',
+    order: 3,
+    title: '节点 3：激活机械生命体',
+    type: 'progress',
+    source: 'author-input',
+    description: '承接推进围绕"激活机械生命体"整理因果关系，明确前置条件、冲突来源与后续影响。人物约束：林铮，谨慎、坚韧、重承诺的拾荒者。零，沉睡的机械生命体，只提供信息与辅助。',
+    constraints: ['只梳理作者已提供的信息', '不新增关键设定', '不改变人物核心性格'],
+  },
+  {
+    id: 'node-004',
+    order: 4,
+    title: '节点 4：黑帮追杀',
+    type: 'progress',
+    source: 'author-input',
+    description: '承接推进围绕"黑帮追杀"整理因果关系，明确前置条件、冲突来源与后续影响。人物约束：林铮，谨慎、坚韧、重承诺的拾荒者。零，沉睡的机械生命体，只提供信息与辅助。',
+    constraints: ['只梳理作者已提供的信息', '不新增关键设定', '不改变人物核心性格'],
+  },
+  {
+    id: 'node-005',
+    order: 5,
+    title: '节点 5：逃离垃圾星',
+    type: 'turning-point',
+    source: 'author-input',
+    description: '阶段收束围绕"逃离垃圾星"整理因果关系，明确前置条件、冲突来源与后续影响。人物约束：林铮，谨慎、坚韧、重承诺的拾荒者。零，沉睡的机械生命体，只提供信息与辅助。',
+    constraints: ['只梳理作者已提供的信息', '不新增关键设定', '不改变人物核心性格'],
+  },
+];
+
 const seedDb = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   settings: {
     apiProvider: 'local',
     apiKey: '',
@@ -45,13 +189,15 @@ const seedDb = {
       worldbuilding: '人类散落在废弃星域中，资源由财阀与黑帮控制，远古机械遗迹被视为禁区。',
       characters: '林铮：谨慎、坚韧、重承诺的拾荒者。零：沉睡的机械生命体，只提供信息与辅助。',
       keyEvents: ['D级垃圾星拾荒', '发现地下遗迹', '激活机械生命体', '黑帮追杀', '逃离垃圾星'],
-      storyline: [],
-      volumes: [],
-      chapters: [],
+      storyline: seedStoryline,
+      settings: { chaptersPerVolume: 4 },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },
   ],
+  volumes: seedVolumes,
+  chapters: seedChapters,
+  snapshots: [],
 };
 
 async function ensureDb() {
@@ -126,40 +272,9 @@ async function readBody(req) {
   return JSON.parse(raw);
 }
 
-function publicProject(project) {
-  return {
-    id: project.id,
-    title: project.title,
-    genre: project.genre,
-    lastModified: project.updatedAt,
-    createdAt: project.createdAt,
-    updatedAt: project.updatedAt,
-    summary: project.inspiration,
-    chapterCount: project.chapters?.length || 0,
-  };
-}
-
-function touch(project) {
-  project.updatedAt = new Date().toISOString();
-  return project;
-}
-
-function createProject(input) {
-  const now = new Date().toISOString();
-  return {
-    id: randomUUID(),
-    title: cleanText(input.title) || '未命名小说',
-    genre: cleanText(input.genre) || '未分类',
-    inspiration: cleanText(input.inspiration),
-    worldbuilding: cleanText(input.worldbuilding),
-    characters: cleanText(input.characters),
-    keyEvents: normalizeList(input.keyEvents),
-    storyline: [],
-    volumes: [],
-    chapters: [],
-    createdAt: now,
-    updatedAt: now,
-  };
+function countWords(text) {
+  if (!text) return 0;
+  return text.replace(/\s/g, '').length;
 }
 
 function cleanText(value) {
@@ -200,98 +315,13 @@ function normalizePunctuation(text) {
     .replace(/:/g, '：');
 }
 
-function buildStoryline(project, input = {}) {
-  const events = normalizeList(input.keyEvents).length
-    ? normalizeList(input.keyEvents)
-    : project.keyEvents?.length
-      ? project.keyEvents
-      : extractSentences(`${project.inspiration}\n${project.worldbuilding}`, 6);
-
-  const safeEvents = events.length ? events : ['确认主线目标', '整理关键冲突', '推进阶段结局'];
-  return safeEvents.map((event, index) => ({
-    id: randomUUID(),
-    order: index + 1,
-    title: `节点 ${index + 1}：${event}`,
-    type: index === 0 ? 'opening' : index === safeEvents.length - 1 ? 'turning-point' : 'progress',
-    source: 'author-input',
-    description: buildStorylineDescription(project, event, index, safeEvents.length),
-    constraints: [
-      '只梳理作者已提供的信息',
-      '不新增关键设定',
-      '不改变人物核心性格',
-    ],
-  }));
-}
-
-function buildStorylineDescription(project, event, index, total) {
-  const position = index === 0 ? '开篇阶段' : index === total - 1 ? '阶段收束' : '承接推进';
-  const characterHint = project.characters ? `人物约束：${project.characters}` : '人物约束：沿用作者设定。';
-  return `${position}围绕“${event}”整理因果关系，明确前置条件、冲突来源与后续影响。${characterHint}`;
-}
-
-function splitChapters(project, input = {}) {
-  const storyline = Array.isArray(input.storyline) && input.storyline.length
-    ? input.storyline
-    : project.storyline?.length
-      ? project.storyline
-      : buildStoryline(project);
-
-  const chaptersPerVolume = Number(input.chaptersPerVolume || 4);
-  const volumes = [];
-  const chapters = [];
-
-  storyline.forEach((node, index) => {
-    const volumeIndex = Math.floor(index / chaptersPerVolume);
-    if (!volumes[volumeIndex]) {
-      volumes[volumeIndex] = {
-        id: randomUUID(),
-        title: `第${toChineseNumber(volumeIndex + 1)}卷：${volumeTitle(node.title)}`,
-        order: volumeIndex + 1,
-        chapterIds: [],
-      };
-    }
-
-    const chapter = {
-      id: randomUUID(),
-      volumeId: volumes[volumeIndex].id,
-      order: index + 1,
-      title: `第${toChineseNumber(index + 1)}章：${chapterTitle(node.title)}`,
-      corePlot: node.description || node.title,
-      transition: '承接上一节点的因果，不跳脱作者给定主线。',
-      characters: project.characters || '沿用作者设定人物',
-      content: '',
-      revisedAt: null,
-    };
-    chapters.push(chapter);
-    volumes[volumeIndex].chapterIds.push(chapter.id);
-  });
-
-  return { volumes, chapters };
-}
-
-function expandDraft(project, chapter, options = {}) {
-  const length = Number(options.targetWords || 900);
-  const paragraphs = [
-    `${chapter.title}。${chapter.corePlot}`,
-    `场景从作者已经设定的世界规则中展开。${project.worldbuilding || '世界背景保持作者原始设定，不额外添加新的力量体系。'}`,
-    `人物行动遵循既有人设。${chapter.characters || project.characters || '主要人物按照作者设定推进。'}`,
-    `冲突推进聚焦本章核心情节，所有描写只服务于“${chapter.corePlot}”。`,
-    `本章结尾落在过渡节点上：${chapter.transition || '为下一章保留明确承接。'}`,
-  ];
-
-  let text = paragraphs.join('\n\n');
-  while (text.length < length) {
-    text += `\n\n${chapter.title}继续围绕既定事件展开，补足环境、动作和常规对话节奏，但不新增关键剧情，不改变人物动机。`;
-  }
-  return formatNovelText(text);
-}
-
-function extractSentences(text, limit) {
-  return cleanText(text)
-    .split(/[。！？\n]/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, limit);
+function toChineseNumber(value) {
+  const chars = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+  if (value <= 10) return chars[value];
+  if (value < 20) return `十${chars[value - 10]}`;
+  const tens = Math.floor(value / 10);
+  const ones = value % 10;
+  return `${chars[tens]}十${ones ? chars[ones] : ''}`;
 }
 
 function volumeTitle(title) {
@@ -302,16 +332,374 @@ function chapterTitle(title) {
   return title.replace(/^节点\s*\d+[:：]\s*/, '').slice(0, 16) || '剧情推进';
 }
 
-function toChineseNumber(value) {
-  const chars = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
-  if (value <= 10) return chars[value];
-  if (value < 20) return `十${chars[value - 10]}`;
-  const tens = Math.floor(value / 10);
-  const ones = value % 10;
-  return `${chars[tens]}十${ones ? chars[ones] : ''}`;
+function touchProject(project) {
+  project.updatedAt = new Date().toISOString();
+  return project;
 }
 
-function exportProject(project) {
+function publicProject(project) {
+  const projectChapters = db => db.chapters.filter(c => c.projectId === project.id);
+  return (db) => ({
+    id: project.id,
+    title: project.title,
+    genre: project.genre,
+    lastModified: project.updatedAt,
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+    summary: project.inspiration,
+    chapterCount: projectChapters(db).length,
+    wordCount: projectChapters(db).reduce((sum, c) => sum + (c.wordCount || 0), 0),
+  });
+}
+
+let dbInstance = null;
+
+async function getDb() {
+  if (!dbInstance) {
+    dbInstance = await readDb();
+  }
+  return dbInstance;
+}
+
+async function saveDb(db) {
+  dbInstance = db;
+  await writeDb(db);
+}
+
+// =====================
+// Project CRUD
+// =====================
+
+function createProject(input) {
+  const now = new Date().toISOString();
+  return {
+    id: randomUUID(),
+    title: cleanText(input.title) || '未命名小说',
+    genre: cleanText(input.genre) || '未分类',
+    inspiration: cleanText(input.inspiration),
+    worldbuilding: cleanText(input.worldbuilding),
+    characters: cleanText(input.characters),
+    keyEvents: normalizeList(input.keyEvents),
+    storyline: [],
+    settings: { chaptersPerVolume: 4 },
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+async function handleProjects(req, res, url, db) {
+  const segments = url.pathname.split('/').filter(Boolean);
+
+  if (segments.length === 2 && !segments[3]) {
+    if (req.method === 'GET') {
+      const publicList = db.projects.map(p => {
+        const projectChapters = db.chapters.filter(c => c.projectId === p.id);
+        return {
+          id: p.id,
+          title: p.title,
+          genre: p.genre,
+          lastModified: p.updatedAt,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+          summary: p.inspiration,
+          chapterCount: projectChapters.length,
+          wordCount: projectChapters.reduce((sum, c) => sum + (c.wordCount || 0), 0),
+        };
+      });
+      sendJson(res, 200, publicList);
+      return;
+    }
+    if (req.method === 'POST') {
+      const project = createProject(await readBody(req));
+      db.projects.unshift(project);
+      await saveDb(db);
+      sendJson(res, 201, project);
+      return;
+    }
+    methodNotAllowed(res);
+    return;
+  }
+
+  const projectId = segments[2];
+  const project = db.projects.find(p => p.id === projectId);
+  if (!project) {
+    notFound(res);
+    return;
+  }
+
+  if (segments.length === 3) {
+    if (req.method === 'GET') {
+      const projectData = { ...project };
+      projectData.volumes = db.volumes.filter(v => v.projectId === projectId).sort((a, b) => a.order - b.order);
+      projectData.chapters = db.chapters.filter(c => c.projectId === projectId).sort((a, b) => a.order - b.order);
+      sendJson(res, 200, projectData);
+      return;
+    }
+    if (req.method === 'PUT' || req.method === 'PATCH') {
+      const body = await readBody(req);
+      Object.assign(project, {
+        title: body.title !== undefined ? cleanText(body.title) : project.title,
+        genre: body.genre !== undefined ? cleanText(body.genre) : project.genre,
+        inspiration: body.inspiration !== undefined ? cleanText(body.inspiration) : project.inspiration,
+        worldbuilding: body.worldbuilding !== undefined ? cleanText(body.worldbuilding) : project.worldbuilding,
+        characters: body.characters !== undefined ? cleanText(body.characters) : project.characters,
+        keyEvents: body.keyEvents !== undefined ? normalizeList(body.keyEvents) : project.keyEvents,
+        settings: body.settings !== undefined ? { ...project.settings, ...body.settings } : project.settings,
+      });
+      touchProject(project);
+      await saveDb(db);
+      sendJson(res, 200, project);
+      return;
+    }
+    if (req.method === 'DELETE') {
+      db.projects = db.projects.filter(p => p.id !== projectId);
+      db.volumes = db.volumes.filter(v => v.projectId !== projectId);
+      db.chapters = db.chapters.filter(c => c.projectId !== projectId);
+      db.snapshots = db.snapshots.filter(s => s.projectId !== projectId);
+      await saveDb(db);
+      sendJson(res, 200, { ok: true });
+      return;
+    }
+  }
+
+  // =====================
+  // Storyline
+  // =====================
+  if (segments[3] === 'storyline' && segments.length === 4 && req.method === 'POST') {
+    const body = await readBody(req);
+    const events = normalizeList(body.keyEvents).length
+      ? normalizeList(body.keyEvents)
+      : project.keyEvents?.length
+        ? project.keyEvents
+        : extractSentences(`${project.inspiration}\n${project.worldbuilding}`, 6);
+
+    const safeEvents = events.length ? events : ['确认主线目标', '整理关键冲突', '推进阶段结局'];
+    project.storyline = safeEvents.map((event, index) => ({
+      id: randomUUID(),
+      order: index + 1,
+      title: `节点 ${index + 1}：${event}`,
+      type: index === 0 ? 'opening' : index === safeEvents.length - 1 ? 'turning-point' : 'progress',
+      source: 'author-input',
+      description: buildStorylineDescription(project, event, index, safeEvents.length),
+      constraints: [
+        '只梳理作者已提供的信息',
+        '不新增关键设定',
+        '不改变人物核心性格',
+      ],
+    }));
+    touchProject(project);
+    await saveDb(db);
+    sendJson(res, 200, project.storyline);
+    return;
+  }
+
+  // =====================
+  // Chapters - Split
+  // =====================
+  if (segments[3] === 'chapters' && segments[4] === 'split' && req.method === 'POST') {
+    const storyline = project.storyline;
+    const newVolumes = [];
+
+    storyline.forEach((node, index) => {
+      const volume = {
+        id: randomUUID(),
+        projectId: projectId,
+        order: index + 1,
+        title: `第${toChineseNumber(index + 1)}卷：${volumeTitle(node.title)}`,
+        wordCount: 0,
+        chapterIds: [],
+      };
+      newVolumes.push(volume);
+    });
+
+    // Remove old volumes/chapters for this project
+    db.volumes = db.volumes.filter(v => v.projectId !== projectId);
+    db.chapters = db.chapters.filter(c => c.projectId !== projectId);
+
+    db.volumes.push(...newVolumes);
+    touchProject(project);
+    await saveDb(db);
+    sendJson(res, 200, { volumes: newVolumes, chapters: [] });
+    return;
+  }
+
+  // =====================
+  // Create chapter
+  // =====================
+  if (segments[3] === 'chapters' && segments.length === 4 && req.method === 'POST') {
+    const body = await readBody(req);
+    const volumeId = body.volumeId;
+    const volume = db.volumes.find(v => v.id === volumeId && v.projectId === projectId);
+    if (!volume) {
+      notFound(res);
+      return;
+    }
+
+    const existingChapters = db.chapters.filter(c => c.volumeId === volumeId);
+    const order = existingChapters.length + 1;
+    const chapter = {
+      id: randomUUID(),
+      projectId,
+      volumeId,
+      order,
+      title: cleanText(body.title) || `第${order}章`,
+      wordCount: 0,
+      content: '',
+      corePlot: cleanText(body.corePlot) || '',
+      characters: body.characters || project.characters || '',
+      transition: cleanText(body.transition) || '',
+      revisedAt: null,
+    };
+    db.chapters.push(chapter);
+    volume.chapterIds = volume.chapterIds || [];
+    volume.chapterIds.push(chapter.id);
+    touchProject(project);
+    await saveDb(db);
+    sendJson(res, 201, chapter);
+    return;
+  }
+
+  // =====================
+  // Chapter operations
+  // =====================
+  const chapterId = segments[4];
+  if (chapterId) {
+    const chapter = db.chapters.find(c => c.id === chapterId);
+    if (!chapter) {
+      notFound(res);
+      return;
+    }
+
+    // Generate draft
+    if (segments[5] === 'draft' && req.method === 'POST') {
+      const body = await readBody(req);
+      const length = Number(body.targetWords || 900);
+      const paragraphs = [
+        `${chapter.title}。${chapter.corePlot}`,
+        `场景从作者已经设定的世界规则中展开。${project.worldbuilding || '世界背景保持作者原始设定，不额外添加新的力量体系。'}`,
+        `人物行动遵循既有人设。${chapter.characters || project.characters || '主要人物按照作者设定推进。'}`,
+        `冲突推进聚焦本章核心情节，所有描写只服务于"${chapter.corePlot}"。`,
+        `本章结尾落在过渡节点上：${chapter.transition || '为下一章保留明确承接。'}`,
+      ];
+
+      let text = paragraphs.join('\n\n');
+      while (text.length < length) {
+        text += `\n\n${chapter.title}继续围绕既定事件展开，补足环境、动作和常规对话节奏，但不新增关键剧情，不改变人物动机。`;
+      }
+      const content = formatNovelText(text);
+      chapter.content = content;
+      chapter.wordCount = countWords(content);
+      chapter.revisedAt = new Date().toISOString();
+      touchProject(project);
+      await saveDb(db);
+      sendJson(res, 200, chapter);
+      return;
+    }
+
+    // Update chapter
+    if (req.method === 'PUT') {
+      const body = await readBody(req);
+      const oldContent = chapter.content;
+      Object.assign(chapter, {
+        title: body.title !== undefined ? cleanText(body.title) : chapter.title,
+        content: body.content !== undefined ? body.content : chapter.content,
+        corePlot: body.corePlot !== undefined ? cleanText(body.corePlot) : chapter.corePlot,
+        characters: body.characters !== undefined ? cleanText(body.characters) : chapter.characters,
+        transition: body.transition !== undefined ? cleanText(body.transition) : chapter.transition,
+      });
+      chapter.wordCount = countWords(chapter.content);
+      chapter.revisedAt = new Date().toISOString();
+
+      // Auto snapshot if content changed
+      if (body.content !== undefined && body.content !== oldContent) {
+        const snapshot = {
+          id: randomUUID(),
+          projectId,
+          chapterId,
+          content: oldContent,
+          wordCount: countWords(oldContent),
+          createdAt: new Date().toISOString(),
+        };
+        db.snapshots.push(snapshot);
+      }
+
+      touchProject(project);
+      await saveDb(db);
+      sendJson(res, 200, chapter);
+      return;
+    }
+  }
+
+  notFound(res);
+}
+
+// =====================
+// Volume operations
+// =====================
+
+async function handleVolumes(req, res, url, db) {
+  const segments = url.pathname.split('/').filter(Boolean);
+  const volumeId = segments[2];
+  const volume = db.volumes.find(v => v.id === volumeId);
+
+  if (!volume) {
+    notFound(res);
+    return;
+  }
+
+  if (req.method === 'GET') {
+    sendJson(res, 200, volume);
+    return;
+  }
+
+  if (req.method === 'PUT') {
+    const body = await readBody(req);
+    Object.assign(volume, {
+      title: body.title !== undefined ? cleanText(body.title) : volume.title,
+      order: body.order !== undefined ? Number(body.order) : volume.order,
+    });
+    await saveDb(db);
+    sendJson(res, 200, volume);
+    return;
+  }
+
+  if (req.method === 'DELETE') {
+    const project = db.projects.find(p => p.id === volume.projectId);
+    db.volumes = db.volumes.filter(v => v.id !== volumeId);
+    db.chapters = db.chapters.filter(c => c.volumeId !== volumeId);
+    if (project) touchProject(project);
+    await saveDb(db);
+    sendJson(res, 200, { ok: true });
+    return;
+  }
+
+  methodNotAllowed(res);
+}
+
+// =====================
+// Snapshot operations
+// =====================
+
+async function handleSnapshots(req, res, url, db) {
+  const segments = url.pathname.split('/').filter(Boolean);
+  const chapterId = segments[3];
+
+  if (req.method === 'GET' && chapterId) {
+    const chapterSnapshots = db.snapshots
+      .filter(s => s.chapterId === chapterId)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    sendJson(res, 200, chapterSnapshots);
+    return;
+  }
+
+  notFound(res);
+}
+
+// =====================
+// Export
+// =====================
+
+function exportProject(project, db) {
   const lines = [
     project.title,
     project.genre,
@@ -328,35 +716,42 @@ function exportProject(project) {
     '【正文】',
   ];
 
-  const sorted = [...(project.chapters || [])].sort((a, b) => a.order - b.order);
-  for (const chapter of sorted) {
+  const sortedChapters = db.chapters
+    .filter(c => c.projectId === project.id)
+    .sort((a, b) => a.order - b.order);
+
+  for (const chapter of sortedChapters) {
     lines.push('', chapter.title, '', chapter.content || '（本章尚未生成正文）');
   }
   return `${lines.join('\n')}\n`;
 }
 
+// =====================
+// Main handler
+// =====================
+
 async function handleApi(req, res, url) {
-  const segments = url.pathname.split('/').filter(Boolean);
-  const db = await readDb();
+  const db = await getDb();
+  const pathname = url.pathname;
 
   if (req.method === 'OPTIONS') {
     sendJson(res, 204, {});
     return;
   }
 
-  if (url.pathname === '/api/health' && req.method === 'GET') {
+  if (pathname === '/api/health' && req.method === 'GET') {
     sendJson(res, 200, { ok: true, service: 'novel-assistant-backend' });
     return;
   }
 
-  if (url.pathname === '/api/settings') {
+  if (pathname === '/api/settings') {
     if (req.method === 'GET') {
       sendJson(res, 200, db.settings);
       return;
     }
     if (req.method === 'PUT') {
       db.settings = { ...db.settings, ...(await readBody(req)) };
-      await writeDb(db);
+      await saveDb(db);
       sendJson(res, 200, db.settings);
       return;
     }
@@ -364,112 +759,55 @@ async function handleApi(req, res, url) {
     return;
   }
 
-  if (url.pathname === '/api/format' && req.method === 'POST') {
+  if (pathname === '/api/format' && req.method === 'POST') {
     const body = await readBody(req);
     sendJson(res, 200, { text: formatNovelText(body.text || '') });
     return;
   }
 
-  if (segments[1] !== 'projects') {
-    notFound(res);
+  if (pathname.startsWith('/api/volumes/')) {
+    await handleVolumes(req, res, url, db);
     return;
   }
 
-  const projectId = segments[2];
-
-  if (!projectId) {
-    if (req.method === 'GET') {
-      sendJson(res, 200, db.projects.map(publicProject));
-      return;
-    }
-    if (req.method === 'POST') {
-      const project = createProject(await readBody(req));
-      db.projects.unshift(project);
-      await writeDb(db);
-      sendJson(res, 201, project);
-      return;
-    }
-    methodNotAllowed(res);
+  if (pathname.startsWith('/api/snapshots/')) {
+    await handleSnapshots(req, res, url, db);
     return;
   }
 
-  const project = db.projects.find((item) => item.id === projectId);
-  if (!project) {
-    notFound(res);
-    return;
-  }
+  if (pathname === '/api/projects' || pathname.startsWith('/api/projects/')) {
+    const segments = pathname.split('/').filter(Boolean);
 
-  if (segments.length === 3) {
-    if (req.method === 'GET') {
-      sendJson(res, 200, project);
+    // Export endpoint
+    if (segments[3] === 'export.txt' && req.method === 'GET') {
+      const project = db.projects.find(p => p.id === segments[2]);
+      if (!project) {
+        notFound(res);
+        return;
+      }
+      sendText(res, 200, exportProject(project, db), `${project.title}.txt`);
       return;
     }
-    if (req.method === 'PUT' || req.method === 'PATCH') {
-      Object.assign(project, await readBody(req));
-      touch(project);
-      await writeDb(db);
-      sendJson(res, 200, project);
-      return;
-    }
-    if (req.method === 'DELETE') {
-      db.projects = db.projects.filter((item) => item.id !== projectId);
-      await writeDb(db);
-      sendJson(res, 200, { ok: true });
-      return;
-    }
-  }
 
-  if (segments[3] === 'storyline' && req.method === 'POST') {
-    project.storyline = buildStoryline(project, await readBody(req));
-    touch(project);
-    await writeDb(db);
-    sendJson(res, 200, project.storyline);
-    return;
-  }
-
-  if (segments[3] === 'chapters' && segments[4] === 'split' && req.method === 'POST') {
-    const result = splitChapters(project, await readBody(req));
-    project.volumes = result.volumes;
-    project.chapters = result.chapters;
-    touch(project);
-    await writeDb(db);
-    sendJson(res, 200, result);
-    return;
-  }
-
-  if (segments[3] === 'chapters' && segments[4] && segments[5] === 'draft' && req.method === 'POST') {
-    const chapter = project.chapters.find((item) => item.id === segments[4]);
-    if (!chapter) {
-      notFound(res);
-      return;
-    }
-    chapter.content = expandDraft(project, chapter, await readBody(req));
-    chapter.revisedAt = new Date().toISOString();
-    touch(project);
-    await writeDb(db);
-    sendJson(res, 200, chapter);
-    return;
-  }
-
-  if (segments[3] === 'chapters' && segments[4] && req.method === 'PUT') {
-    const chapter = project.chapters.find((item) => item.id === segments[4]);
-    if (!chapter) {
-      notFound(res);
-      return;
-    }
-    Object.assign(chapter, await readBody(req), { revisedAt: new Date().toISOString() });
-    touch(project);
-    await writeDb(db);
-    sendJson(res, 200, chapter);
-    return;
-  }
-
-  if (segments[3] === 'export.txt' && req.method === 'GET') {
-    sendText(res, 200, exportProject(project), `${project.title}.txt`);
+    await handleProjects(req, res, url, db);
     return;
   }
 
   notFound(res);
+}
+
+function buildStorylineDescription(project, event, index, total) {
+  const position = index === 0 ? '开篇阶段' : index === total - 1 ? '阶段收束' : '承接推进';
+  const characterHint = project.characters ? `人物约束：${project.characters}` : '人物约束：沿用作者设定。';
+  return `${position}围绕"${event}"整理因果关系，明确前置条件、冲突来源与后续影响。${characterHint}`;
+}
+
+function extractSentences(text, limit) {
+  return cleanText(text)
+    .split(/[。！？\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, limit);
 }
 
 async function serveStatic(req, res, url) {

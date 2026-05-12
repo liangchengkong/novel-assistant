@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import type { MockChapter } from '../../mocks/novelMockData';
+import type { BackendChapter } from '../../api/novelApi';
 
-type ChapterCardProps = Pick<MockChapter, 'id' | 'title' | 'corePlot' | 'characters' | 'transition'>;
+type ChapterCardProps = Pick<BackendChapter, 'id' | 'title' | 'corePlot' | 'characters' | 'transition'>;
 
 export default function ChapterCard({ id, title, corePlot, characters, transition }: ChapterCardProps) {
   return (
@@ -19,7 +19,7 @@ export default function ChapterCard({ id, title, corePlot, characters, transitio
         </p>
         <div className="outline-card-actions">
           <Link
-            to={`/workspace?chapter=${encodeURIComponent(id)}`}
+            to={`/workspace?chapterId=${encodeURIComponent(id)}`}
             className="btn-outline outline-card-link"
           >
             生成正文

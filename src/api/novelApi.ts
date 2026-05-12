@@ -9,6 +9,7 @@ export interface ProjectSummary {
   updatedAt: string;
   summary: string;
   chapterCount: number;
+  wordCount?: number;
 }
 
 export interface StorylineItem {
@@ -23,16 +24,20 @@ export interface StorylineItem {
 
 export interface BackendVolume {
   id: string;
+  projectId: string;
   title: string;
   order: number;
   chapterIds: string[];
+  wordCount?: number;
 }
 
 export interface BackendChapter {
   id: string;
+  projectId: string;
   volumeId: string;
   order: number;
   title: string;
+  wordCount?: number;
   corePlot: string;
   characters: string;
   transition: string;
@@ -126,6 +131,13 @@ export function splitChapters(projectId: string) {
   return request<ChapterSplitResult>(`/api/projects/${projectId}/chapters/split`, {
     method: 'POST',
     body: JSON.stringify({}),
+  });
+}
+
+export function createChapter(projectId: string, data: { volumeId: string; title?: string; corePlot?: string }) {
+  return request<BackendChapter>(`/api/projects/${projectId}/chapters`, {
+    method: 'POST',
+    body: JSON.stringify(data),
   });
 }
 
