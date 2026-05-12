@@ -176,7 +176,11 @@ const seedDb = {
   schemaVersion: 2,
   settings: {
     apiProvider: 'local',
+    apiBaseUrl: '',
     apiKey: '',
+    model: '',
+    darkMode: false,
+    fontFamily: 'serif',
     autoSave: true,
     aiPolishLevel: 'moderate',
   },
@@ -256,6 +260,10 @@ function methodNotAllowed(res) {
   sendJson(res, 405, { error: 'Method not allowed' });
 }
 
+function httpError(status, message) {
+  return Object.assign(new Error(message), { status });
+}
+
 async function readBody(req) {
   const chunks = [];
   let size = 0;
@@ -279,6 +287,83 @@ function countWords(text) {
 
 function cleanText(value) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeApiBaseUrl(value) {
+  const apiBaseUrl = cleanText(value).replace(/\/+$/, '');
+  if (!apiBaseUrl) {
+    throw httpError(400, '模型接口地址不能为空');
+  }
+
+  try {
+    const parsed = new URL(apiBaseUrl);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      throw new Error('invalid protocol');
+    }
+  } catch {
+    throw httpError(400, '模型接口地址格式不正确，请填写 OpenAI-compatible base URL');
+  }
+
+  return apiBaseUrl;
+}
+
+function normalizeApiKey(value) {
+  const apiKey = cleanText(value);
+  if (!apiKey) {
+    throw httpError(400, 'API Key 不能为空');
+  }
+  return apiKey;
+}
+
+async function requestLlmJson(url, options) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    const rawText = await response.text();
+    let payload = {};
+
+    if (rawText.trim()) {
+      try {
+        payload = JSON.parse(rawText);
+      } catch {
+        payload = { error: rawText };
+      }
+    }
+
+    if (!response.ok) {
+      const message = payload?.error?.message || payload?.message || payload?.error || `上游模型接口请求失败：${response.status}`;
+      throw httpError(502, String(message));
+    }
+
+    return payload;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw httpError(504, '模型接口请求超时');
+    }
+    if (error.status) {
+      throw error;
+    }
+    throw httpError(502, error.message || '无法连接模型接口');
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function mapLlmModels(payload) {
+  const list = Array.isArray(payload?.data) ? payload.data : [];
+  return list
+    .map((item) => {
+      const id = cleanText(item?.id);
+      if (!id) return null;
+      return {
+        id,
+        name: cleanText(item?.name) || id,
+        ownedBy: cleanText(item?.owned_by || item?.ownedBy),
+      };
+    })
+    .filter(Boolean);
 }
 
 function normalizeList(value) {
@@ -330,6 +415,28 @@ function volumeTitle(title) {
 
 function chapterTitle(title) {
   return title.replace(/^节点\s*\d+[:：]\s*/, '').slice(0, 16) || '剧情推进';
+}
+
+function buildSplitChapterTitle(node, chapterIndex) {
+  const baseTitle = chapterTitle(node.title);
+  const suffixes = ['开端', '推进', '冲突', '收束'];
+  return chapterIndex === 0 ? baseTitle : `${baseTitle}${suffixes[chapterIndex] || `阶段${chapterIndex + 1}`}`;
+}
+
+function buildSplitChapterPlot(project, node, chapterIndex, total) {
+  const chapterRole = chapterIndex === 0
+    ? '建立本卷核心场景、目标和冲突入口'
+    : chapterIndex === total - 1
+      ? '完成本卷阶段性收束，并为下一卷保留承接点'
+      : '推进本卷关键事件，强化人物选择和外部阻力';
+  const characterHint = project.characters ? `人物约束：${project.characters}` : '人物沿用当前设定。';
+  return `${chapterRole}。本章围绕“${node.title}”展开，核心依据：${node.description || node.title}。${characterHint}`;
+}
+
+function buildSplitChapterTransition(chapterIndex, total) {
+  if (chapterIndex === 0) return '承接本卷开端，抛出主要矛盾并引向下一章。';
+  if (chapterIndex === total - 1) return '收束本卷核心事件，并留下进入下一卷的动因。';
+  return '承接上一章冲突，继续推动本卷主线。';
 }
 
 function touchProject(project) {
@@ -497,8 +604,20 @@ async function handleProjects(req, res, url, db) {
   // Chapters - Split
   // =====================
   if (segments[3] === 'chapters' && segments[4] === 'split' && req.method === 'POST') {
-    const storyline = project.storyline;
+    const storyline = project.storyline?.length
+      ? project.storyline
+      : [
+          {
+            id: randomUUID(),
+            order: 1,
+            title: '节点 1：主线启动',
+            description: project.inspiration || '围绕当前设定启动主线剧情。',
+          },
+        ];
+    const chaptersPerVolume = Number(project.settings?.chaptersPerVolume || 4);
     const newVolumes = [];
+    const newChapters = [];
+    let chapterOrder = 1;
 
     storyline.forEach((node, index) => {
       const volume = {
@@ -510,6 +629,25 @@ async function handleProjects(req, res, url, db) {
         chapterIds: [],
       };
       newVolumes.push(volume);
+
+      for (let chapterIndex = 0; chapterIndex < chaptersPerVolume; chapterIndex += 1) {
+        const chapter = {
+          id: randomUUID(),
+          projectId,
+          volumeId: volume.id,
+          order: chapterOrder,
+          title: `第${toChineseNumber(chapterOrder)}章：${buildSplitChapterTitle(node, chapterIndex)}`,
+          wordCount: 0,
+          content: '',
+          corePlot: buildSplitChapterPlot(project, node, chapterIndex, chaptersPerVolume),
+          characters: project.characters || '',
+          transition: buildSplitChapterTransition(chapterIndex, chaptersPerVolume),
+          revisedAt: null,
+        };
+        chapterOrder += 1;
+        volume.chapterIds.push(chapter.id);
+        newChapters.push(chapter);
+      }
     });
 
     // Remove old volumes/chapters for this project
@@ -517,9 +655,10 @@ async function handleProjects(req, res, url, db) {
     db.chapters = db.chapters.filter(c => c.projectId !== projectId);
 
     db.volumes.push(...newVolumes);
+    db.chapters.push(...newChapters);
     touchProject(project);
     await saveDb(db);
-    sendJson(res, 200, { volumes: newVolumes, chapters: [] });
+    sendJson(res, 200, { volumes: newVolumes, chapters: newChapters });
     return;
   }
 
@@ -628,6 +767,19 @@ async function handleProjects(req, res, url, db) {
       sendJson(res, 200, chapter);
       return;
     }
+
+    if (req.method === 'DELETE') {
+      const volume = db.volumes.find(v => v.id === chapter.volumeId);
+      if (volume) {
+        volume.chapterIds = (volume.chapterIds || []).filter(id => id !== chapter.id);
+      }
+      db.chapters = db.chapters.filter(c => c.id !== chapter.id);
+      db.snapshots = db.snapshots.filter(s => s.chapterId !== chapter.id);
+      touchProject(project);
+      await saveDb(db);
+      sendJson(res, 200, { ok: true });
+      return;
+    }
   }
 
   notFound(res);
@@ -665,8 +817,12 @@ async function handleVolumes(req, res, url, db) {
 
   if (req.method === 'DELETE') {
     const project = db.projects.find(p => p.id === volume.projectId);
+    const deletedChapterIds = db.chapters
+      .filter(c => c.volumeId === volumeId)
+      .map(c => c.id);
     db.volumes = db.volumes.filter(v => v.id !== volumeId);
     db.chapters = db.chapters.filter(c => c.volumeId !== volumeId);
+    db.snapshots = db.snapshots.filter(s => !deletedChapterIds.includes(s.chapterId));
     if (project) touchProject(project);
     await saveDb(db);
     sendJson(res, 200, { ok: true });
@@ -741,6 +897,61 @@ async function handleApi(req, res, url) {
 
   if (pathname === '/api/health' && req.method === 'GET') {
     sendJson(res, 200, { ok: true, service: 'novel-assistant-backend' });
+    return;
+  }
+
+  if (pathname === '/api/llm/models' && req.method === 'POST') {
+    const body = await readBody(req);
+    const apiBaseUrl = normalizeApiBaseUrl(body.apiBaseUrl);
+    const apiKey = normalizeApiKey(body.apiKey);
+    const payload = await requestLlmJson(`${apiBaseUrl}/models`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const models = mapLlmModels(payload);
+    if (models.length === 0) {
+      throw httpError(502, '无法获取模型列表');
+    }
+
+    sendJson(res, 200, { models });
+    return;
+  }
+
+  if (pathname === '/api/llm/test' && req.method === 'POST') {
+    const body = await readBody(req);
+    const apiBaseUrl = normalizeApiBaseUrl(body.apiBaseUrl);
+    const apiKey = normalizeApiKey(body.apiKey);
+    const model = cleanText(body.model);
+
+    if (!model) {
+      throw httpError(400, '请选择可用模型');
+    }
+
+    const payload = await requestLlmJson(`${apiBaseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: 'user', content: 'hello' }],
+        temperature: 0,
+        max_tokens: 64,
+        stream: false,
+      }),
+    });
+
+    const text = cleanText(payload?.choices?.[0]?.message?.content || payload?.choices?.[0]?.text);
+    if (!text) {
+      throw httpError(502, '模型接口没有返回有效文本');
+    }
+
+    sendJson(res, 200, { text });
     return;
   }
 

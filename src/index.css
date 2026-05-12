@@ -1,6 +1,7 @@
 :root {
   --bg-color: #f4f6f5;
   --panel-bg: #ffffff;
+  --input-bg: #ffffff;
   --text-main: #24313d;
   --text-muted: #74808a;
   --primary-color: #5b8c85;
@@ -8,11 +9,28 @@
   --border-color: #e4ebe8;
   --hover-bg: #eef5f3;
   --danger-color: #b85050;
+  --editor-text: #303638;
+  --editor-shadow: rgba(36, 49, 61, 0.04);
   --sidebar-width: 200px;
   --sidebar-collapsed-width: 68px;
   --chapter-sidebar-width: 220px;
   --tools-width: 320px;
   --transition-speed: 0.25s;
+}
+
+body[data-theme='dark'] {
+  --bg-color: #171c1b;
+  --panel-bg: #202725;
+  --input-bg: #151a19;
+  --text-main: #e7eeeb;
+  --text-muted: #9aa8a3;
+  --primary-color: #79b5ac;
+  --primary-hover: #8ec9c1;
+  --border-color: #34413d;
+  --hover-bg: #293531;
+  --danger-color: #e18484;
+  --editor-text: #edf3f0;
+  --editor-shadow: rgba(0, 0, 0, 0.24);
 }
 
 * {
@@ -40,6 +58,13 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+input,
+textarea,
+select {
+  background-color: var(--input-bg);
+  color: var(--text-main);
 }
 
 button {
@@ -141,4 +166,19 @@ a {
   margin-bottom: 10px;
   font-weight: 650;
   font-size: 14px;
+}
+
+body[data-editor-font='serif'] .editor-paper,
+body[data-editor-font='serif'] .font-preview {
+  font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
+}
+
+body[data-editor-font='simsun'] .editor-paper,
+body[data-editor-font='simsun'] .font-preview {
+  font-family: FangSong, "FangSong_GB2312", SimSun, serif;
+}
+
+body[data-editor-font='sans'] .editor-paper,
+body[data-editor-font='sans'] .font-preview {
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
 }

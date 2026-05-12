@@ -7,7 +7,6 @@ import {
   splitChapters,
   createChapter,
   type ProjectDetail,
-  type BackendVolume,
   type BackendChapter,
 } from '../../api/novelApi';
 import { useApp } from '../../context/AppContext';
@@ -119,7 +118,7 @@ export default function OutlinePage() {
     setSplitting(true);
     try {
       const result = await splitChapters(project.id);
-      const updated = { ...project, volumes: result.volumes, chapters: [] };
+      const updated = { ...project, volumes: result.volumes, chapters: result.chapters };
       setProject(updated);
       dispatch({ type: 'SET_CURRENT_PROJECT', projectId: project.id, project: updated });
       setActiveTab('chapter-outline');

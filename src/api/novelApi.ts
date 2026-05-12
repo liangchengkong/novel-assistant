@@ -67,11 +67,19 @@ export interface ChapterSplitResult {
 
 export interface BackendSettings {
   apiProvider: string;
+  apiBaseUrl?: string;
   apiKey: string;
+  model?: string;
   autoSave: boolean;
   aiPolishLevel: 'conservative' | 'moderate' | 'aggressive';
   darkMode?: boolean;
   fontFamily?: string;
+}
+
+export interface LlmModel {
+  id: string;
+  name: string;
+  ownedBy?: string;
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -141,6 +149,19 @@ export function createChapter(projectId: string, data: { volumeId: string; title
   });
 }
 
+export function updateVolume(volumeId: string, data: Partial<BackendVolume>) {
+  return request<BackendVolume>(`/api/volumes/${volumeId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteVolume(volumeId: string) {
+  return request<{ ok: true }>(`/api/volumes/${volumeId}`, {
+    method: 'DELETE',
+  });
+}
+
 export function generateChapterDraft(projectId: string, chapterId: string, data?: { targetWords?: number }) {
   return request<BackendChapter>(`/api/projects/${projectId}/chapters/${chapterId}/draft`, {
     method: 'POST',
@@ -152,6 +173,12 @@ export function updateChapter(projectId: string, chapterId: string, data: Partia
   return request<BackendChapter>(`/api/projects/${projectId}/chapters/${chapterId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
+  });
+}
+
+export function deleteChapter(projectId: string, chapterId: string) {
+  return request<{ ok: true }>(`/api/projects/${projectId}/chapters/${chapterId}`, {
+    method: 'DELETE',
   });
 }
 
@@ -169,6 +196,20 @@ export function getSettings() {
 export function updateSettings(data: Partial<BackendSettings>) {
   return request<BackendSettings>('/api/settings', {
     method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export function listLlmModels(data: { apiBaseUrl: string; apiKey: string }) {
+  return request<{ models: LlmModel[] }>('/api/llm/models', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function testLlmConnection(data: { apiBaseUrl: string; apiKey: string; model: string }) {
+  return request<{ text: string }>('/api/llm/test', {
+    method: 'POST',
     body: JSON.stringify(data),
   });
 }

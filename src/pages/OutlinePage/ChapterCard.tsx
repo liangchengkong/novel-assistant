@@ -19,7 +19,7 @@ export default function ChapterCard({ id, title, corePlot, characters, transitio
         </p>
         <div className="outline-card-actions">
           <Link
-            to={`/workspace?chapterId=${encodeURIComponent(id)}`}
+            to={`/workspace?chapter=${encodeURIComponent(id)}`}
             className="btn-outline outline-card-link"
           >
             生成正文
